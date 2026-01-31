@@ -67,6 +67,9 @@
                         <p class="text-xs mt-4 py-1 px-3 bg-black bg-opacity-20 rounded-full inline-block">
                             ※衛星＋地上契約の合算（税込目安）
                         </p>
+                        <p class="text-[10px] mt-4 opacity-80 leading-relaxed font-bold">
+                            ※チューナーレステレビをご使用の場合、<br class="hidden md:inline">NHKの受信契約は不要です。
+                        </p>
                     </div>
                 </div>
             </div>
@@ -120,12 +123,12 @@
         const nhkTotal = 3050;
         const services = [
             { id: 'yt', name: 'YouTube Premium', price: 1280 },
-            { id: 'dp', name: 'Disney+', price: 1140 },
+            { id: 'dp', name: 'Disney+ (Standard)', price: 1140 },
             { id: 'hu', name: 'hulu', price: 1026 },
             { id: 'at', name: 'Apple TV+', price: 900 },
             { id: 'nf', name: 'Netflix (Standard)', price: 890 },
             { id: 'am', name: 'Amazon Prime Video', price: 600 },
-            { id: 'ab', name: 'ABEMAプレミアム', price: 580 }
+            { id: 'ab', name: '広告つきABEMAプレミアム', price: 580 }
         ];
 
         const subListContainer = document.getElementById('sub-list');
