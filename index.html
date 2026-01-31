@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NHK vs 主要サブスク比較シミュレーター</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+        body {
+            font-family: 'Noto+Sans+JP', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .gradient-red {
+            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+        }
+        .gradient-blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        }
+        .gradient-green {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+        }
+        .card-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .custom-checkbox:checked + label {
+            background-color: #eff6ff;
+            border-color: #3b82f6;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <div class="max-w-5xl w-full bg-white rounded-3xl overflow-hidden card-shadow">
+        <!-- Header -->
+        <div class="p-6 md:p-8 text-center border-b border-gray-100 bg-white">
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+                コストパフォーマンス・シミュレーター
+            </h1>
+            <p class="text-gray-500">NHK受信料をサブスクに充てたら、どれだけのサービスを楽しめる？</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-0">
+            <!-- Left Side: NHK (Static Reference) -->
+            <div class="p-6 md:p-8 bg-slate-50 border-r border-gray-100">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 gradient-red rounded-lg flex items-center justify-center text-white mr-3 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-700">NHK受信料（固定費）</h2>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                        <span class="text-gray-600 font-medium">地上契約</span>
+                        <span class="text-lg font-bold text-gray-800">¥1,100</span>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-white rounded-xl shadow-sm border border-gray-200">
+                        <span class="text-gray-600 font-medium">衛星契約</span>
+                        <span class="text-lg font-bold text-gray-800">¥1,950</span>
+                    </div>
+                    <div class="mt-8 p-8 gradient-red rounded-2xl text-white text-center shadow-inner">
+                        <p class="text-sm opacity-90 mb-1">NHK 1ヶ月あたりのコスト</p>
+                        <p class="text-5xl font-black">¥3,050</p>
+                        <p class="text-xs mt-4 py-1 px-3 bg-black bg-opacity-20 rounded-full inline-block">
+                            ※衛星＋地上契約の合算（税込目安）
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side: Interactive Subscriptions -->
+            <div class="p-6 md:p-8 bg-white">
+                <div class="flex items-center mb-6">
+                    <div class="w-10 h-10 gradient-blue rounded-lg flex items-center justify-center text-white mr-3 shadow-lg">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-700">サブスクを選択</h2>
+                </div>
+
+                <div class="space-y-2 mb-6" id="sub-list">
+                    <!-- Checkboxes will be rendered here -->
+                </div>
+
+                <div class="pt-6 border-t border-gray-100">
+                    <div class="flex justify-between items-end mb-2">
+                        <span class="text-gray-600 font-bold">選択したサブスク合計</span>
+                        <div class="text-right">
+                            <span id="sub-total" class="text-3xl font-black text-blue-600 font-mono">¥0</span>
+                            <span class="text-gray-400 text-sm ml-1">/月</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Footer -->
+        <div id="result-bar" class="p-6 md:p-8 gradient-green text-white transition-all duration-500">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                <div class="text-center md:text-left">
+                    <p class="text-sm opacity-90 mb-1 font-bold">NHK受信料との差額</p>
+                    <h3 id="comparison-text" class="text-2xl md:text-3xl font-black">
+                        NHKを解約すると、月々 ¥3,050 自由に！
+                    </h3>
+                </div>
+                <div id="status-icon" class="hidden md:flex w-16 h-16 bg-white bg-opacity-20 rounded-full items-center justify-center backdrop-blur-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const nhkTotal = 3050;
+        const services = [
+            { id: 'yt', name: 'YouTube Premium', price: 1280 },
+            { id: 'dp', name: 'Disney+', price: 1140 },
+            { id: 'hu', name: 'hulu', price: 1026 },
+            { id: 'at', name: 'Apple TV+', price: 900 },
+            { id: 'nf', name: 'Netflix (Standard)', price: 890 },
+            { id: 'am', name: 'Amazon Prime Video', price: 600 },
+            { id: 'ab', name: 'ABEMAプレミアム', price: 580 }
+        ];
+
+        const subListContainer = document.getElementById('sub-list');
+        const subTotalEl = document.getElementById('sub-total');
+        const comparisonTextEl = document.getElementById('comparison-text');
+        const resultBar = document.getElementById('result-bar');
+
+        // Render services
+        services.forEach(service => {
+            const div = document.createElement('div');
+            div.className = 'relative';
+            div.innerHTML = `
+                <input type="checkbox" id="${service.id}" value="${service.price}" class="hidden custom-checkbox sub-item">
+                <label for="${service.id}" class="flex justify-between items-center p-3 border border-gray-100 rounded-xl cursor-pointer hover:border-blue-300 transition-all duration-200 select-none">
+                    <div class="flex items-center">
+                        <div class="w-5 h-5 border-2 border-gray-300 rounded mr-3 flex items-center justify-center checkbox-indicator transition-colors">
+                            <div class="w-2.5 h-2.5 bg-blue-500 rounded-sm hidden"></div>
+                        </div>
+                        <span class="text-sm font-bold text-gray-700">${service.name}</span>
+                    </div>
+                    <span class="text-sm font-mono font-bold text-gray-500">¥${service.price.toLocaleString()}</span>
+                </label>
+            `;
+            subListContainer.appendChild(div);
+        });
+
+        // Calculation logic
+        function updateTotals() {
+            const checkboxes = document.querySelectorAll('.sub-item');
+            let total = 0;
+            checkboxes.forEach(cb => {
+                const label = cb.nextElementSibling;
+                const indicator = label.querySelector('.checkbox-indicator div');
+                const box = label.querySelector('.checkbox-indicator');
+                
+                if (cb.checked) {
+                    total += parseInt(cb.value);
+                    indicator.classList.remove('hidden');
+                    box.classList.add('border-blue-500');
+                    label.classList.add('bg-blue-50', 'border-blue-200');
+                } else {
+                    indicator.classList.add('hidden');
+                    box.classList.remove('border-blue-500');
+                    label.classList.remove('bg-blue-50', 'border-blue-200');
+                }
+            });
+
+            subTotalEl.innerText = `¥${total.toLocaleString()}`;
+
+            const diff = nhkTotal - total;
+            
+            if (diff > 0) {
+                resultBar.className = 'p-6 md:p-8 gradient-green text-white transition-all duration-500';
+                comparisonTextEl.innerText = `NHK解約後、あと ¥${diff.toLocaleString()} 自由に使えます！`;
+            } else if (diff === 0) {
+                resultBar.className = 'p-6 md:p-8 bg-blue-600 text-white transition-all duration-500';
+                comparisonTextEl.innerText = `NHK受信料とピッタリ同じ金額です。`;
+            } else {
+                resultBar.className = 'p-6 md:p-8 bg-amber-500 text-white transition-all duration-500';
+                comparisonTextEl.innerText = `NHKより ¥${Math.abs(diff).toLocaleString()} 高くなりますが、満足度は？`;
+            }
+        }
+
+        // Add event listeners
+        document.querySelectorAll('.sub-item').forEach(cb => {
+            cb.addEventListener('change', updateTotals);
+        });
+
+        // Initial call
+        updateTotals();
+    </script>
+</body>
+</html>
