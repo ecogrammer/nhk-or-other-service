@@ -90,12 +90,31 @@
                 </div>
 
                 <div class="pt-6 border-t border-gray-100">
-                    <div class="flex justify-between items-end mb-2">
+                    <div class="flex justify-between items-end mb-4">
                         <span class="text-gray-600 font-bold">選択したサブスク合計</span>
                         <div class="text-right">
                             <span id="sub-total" class="text-3xl font-black text-blue-600 font-mono">¥0</span>
                             <span class="text-gray-400 text-sm ml-1">/月</span>
                         </div>
+                    </div>
+                    
+                    <!-- Share Buttons -->
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <button onclick="share('x')" class="flex-1 bg-black text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center hover:opacity-80 transition-all">
+                                <svg class="w-3.5 h-3.5 mr-2" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                Xでシェア
+                            </button>
+                            <button onclick="share('threads')" class="flex-1 bg-black text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center hover:opacity-80 transition-all">
+                                Threads
+                            </button>
+                        </div>
+                        <button id="copy-btn" onclick="copyLink()" class="w-full bg-gray-100 text-gray-600 py-2 px-4 rounded-xl font-bold text-xs flex items-center justify-center hover:bg-gray-200 transition-all">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                            </svg>
+                            リンクをコピー
+                        </button>
                     </div>
                 </div>
             </div>
@@ -190,6 +209,81 @@
                 resultBar.className = 'p-6 md:p-8 bg-amber-500 text-white transition-all duration-500';
                 comparisonTextEl.innerText = `NHKより ¥${Math.abs(diff).toLocaleString()} 高くなりますが、満足度は？`;
             }
+
+            updateURL();
+        }
+
+        function updateURL() {
+            const selectedIds = Array.from(document.querySelectorAll('.sub-item:checked'))
+                .map(cb => cb.id);
+            const url = new URL(window.location);
+            if (selectedIds.length > 0) {
+                url.searchParams.set('s', selectedIds.join(','));
+            } else {
+                url.searchParams.delete('s');
+            }
+            window.history.replaceState({}, '', url);
+        }
+
+        function loadFromURL() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const s = urlParams.get('s');
+            if (s) {
+                const ids = s.split(',');
+                ids.forEach(id => {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = true;
+                });
+            }
+        }
+
+        function share(platform) {
+            const total = subTotalEl.innerText;
+            const diff = nhkTotal - parseInt(total.replace(/[^0-9]/g, ''));
+            const selectedServices = Array.from(document.querySelectorAll('.sub-item:checked'))
+                .map(cb => services.find(s => s.id === cb.id).name);
+            
+            let text = `NHK受信料（¥3,050/月）をサブスクに充てたら…💻\n\n`;
+            if (selectedServices.length > 0) {
+                text += `【契約内容】\n${selectedServices.join('\n')}\n\n`;
+            }
+            text += `合計: ${total}/月\n`;
+            
+            if (diff > 0) {
+                text += `NHKより ¥${diff.toLocaleString()} お得！✨`;
+            } else if (diff === 0) {
+                text += `NHKとピッタリ同額！🎯`;
+            } else {
+                text += `NHKより ¥${Math.abs(diff).toLocaleString()} 高いですが、満足度爆上がり！🔥`;
+            }
+            
+            text += `\n#NHK受信料 #サブスク比較 #節約\n`;
+            
+            const shareUrl = window.location.href;
+            
+            if (platform === 'x') {
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`);
+            } else if (platform === 'threads') {
+                window.open(`https://www.threads.net/intent/post?text=${encodeURIComponent(text + '\n' + shareUrl)}`);
+            }
+        }
+
+        async function copyLink() {
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                const btn = document.getElementById('copy-btn');
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = 'コピーしました！';
+                btn.classList.replace('bg-gray-100', 'bg-green-100');
+                btn.classList.replace('text-gray-600', 'text-green-700');
+                setTimeout(() => {
+                    btn.innerHTML = originalContent;
+                    btn.classList.replace('bg-green-100', 'bg-gray-100');
+                    btn.classList.replace('text-green-700', 'text-gray-600');
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
         }
 
         // Add event listeners
@@ -198,6 +292,7 @@
         });
 
         // Initial call
+        loadFromURL();
         updateTotals();
     </script>
 </body>
