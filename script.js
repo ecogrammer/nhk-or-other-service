@@ -1,4 +1,4 @@
-const nhkTotal = 3050;
+let nhkTotal = 1950;
 const services = [
     { id: 'ab-p', name: 'ABEMAプレミアム', price: 1080 },
     { id: 'ab', name: 'ABEMA広告つきプレミアム', price: 580 },
@@ -15,6 +15,7 @@ const services = [
 
 const subListContainer = document.getElementById('sub-list');
 const subTotalEl = document.getElementById('sub-total');
+const nhkCostDisplayEl = document.getElementById('nhk-cost-display');
 const comparisonTextEl = document.getElementById('comparison-text');
 const resultBar = document.getElementById('result-bar');
 
@@ -39,6 +40,11 @@ services.forEach(service => {
 
 // Calculation logic
 function updateTotals() {
+    // NHK Total Update
+    const selectedNhk = document.querySelector('input[name="nhk-type"]:checked');
+    nhkTotal = parseInt(selectedNhk.value);
+    nhkCostDisplayEl.innerText = `¥${nhkTotal.toLocaleString()}`;
+
     const checkboxes = document.querySelectorAll('.sub-item');
     let total = 0;
     checkboxes.forEach(cb => {
@@ -79,7 +85,10 @@ function updateTotals() {
 function updateURL() {
     const selectedIds = Array.from(document.querySelectorAll('.sub-item:checked'))
         .map(cb => cb.id);
+    const nhkTypeId = document.querySelector('input[name="nhk-type"]:checked').id;
+
     const url = new URL(window.location);
+    url.searchParams.set('nt', nhkTypeId); // nt for nhk-type
     if (selectedIds.length > 0) {
         url.searchParams.set('s', selectedIds.join(','));
     } else {
@@ -90,6 +99,13 @@ function updateURL() {
 
 function loadFromURL() {
     const urlParams = new URLSearchParams(window.location.search);
+
+    const nt = urlParams.get('nt');
+    if (nt) {
+        const rb = document.getElementById(nt);
+        if (rb) rb.checked = true;
+    }
+
     const s = urlParams.get('s');
     if (s) {
         const ids = s.split(',');
@@ -102,22 +118,23 @@ function loadFromURL() {
 
 function share(platform) {
     const total = subTotalEl.innerText;
-    const diff = nhkTotal - parseInt(total.replace(/[^0-9]/g, ''));
+    const diffNum = nhkTotal - parseInt(total.replace(/[^0-9]/g, ''));
     const selectedServices = Array.from(document.querySelectorAll('.sub-item:checked'))
         .map(cb => services.find(s => s.id === cb.id).name);
+    const nhkTypeName = document.querySelector('input[name="nhk-type"]:checked').id === 'nhk-ground' ? '地上契約' : '衛星契約';
 
-    let text = `NHK受信料（¥3,050/月）をサブスクに充てたら…💻\n\n`;
+    let text = `NHK受信料（${nhkTypeName} ¥${nhkTotal.toLocaleString()}/月）をサブスクに充てたら…💻\n\n`;
     if (selectedServices.length > 0) {
         text += `【契約内容】\n${selectedServices.join('\n')}\n\n`;
     }
     text += `合計: ${total}/月\n`;
 
-    if (diff > 0) {
-        text += `NHKより ¥${diff.toLocaleString()} お得！✨`;
-    } else if (diff === 0) {
+    if (diffNum > 0) {
+        text += `NHKより ¥${diffNum.toLocaleString()} お得！✨`;
+    } else if (diffNum === 0) {
         text += `NHKとピッタリ同額！🎯`;
     } else {
-        text += `NHKより ¥${Math.abs(diff).toLocaleString()} 高いですが、満足度爆上がり！🔥`;
+        text += `NHKより ¥${Math.abs(diffNum).toLocaleString()} 高いですが、満足度爆上がり！🔥`;
     }
 
     text += `\n#NHK受信料 #サブスク比較 #節約\n`;
@@ -154,6 +171,11 @@ document.querySelectorAll('.sub-item').forEach(cb => {
     cb.addEventListener('change', updateTotals);
 });
 
+document.querySelectorAll('.nhk-radio').forEach(rb => {
+    rb.addEventListener('change', updateTotals);
+});
+
 // Initial call
 loadFromURL();
 updateTotals();
+
